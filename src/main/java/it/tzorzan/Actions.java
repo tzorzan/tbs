@@ -20,7 +20,6 @@ public class Actions {
     private static class QueueAction implements Action<States, Events> {
         @Override
         public void execute(StateContext<States, Events> context) {
-            System.out.println("Action called: " + this.getClass().toString());
             List<String> queue = context.getExtendedState().get(Variables.QUEUE, List.class);
             List<String> newqueue = new ArrayList<>(queue);
             newqueue.add((String) context.getMessageHeader(Headers.NAME));
@@ -31,7 +30,6 @@ public class Actions {
     private static class TurnAction implements Action<States, Events> {
         @Override
         public void execute(StateContext<States, Events> context) {
-            System.out.println("Action called: " + this.getClass().toString());
             List<String> queue = context.getExtendedState().get(Variables.QUEUE, List.class);
             context.getExtendedState().getVariables().put(Variables.TURN, new String(queue.get(0)));
         }
@@ -40,7 +38,6 @@ public class Actions {
     private static class DequeueAction implements Action<States, Events> {
         @Override
         public void execute(StateContext<States, Events> context) {
-            System.out.println("Action called: " + this.getClass().toString());
             List<String> queue = context.getExtendedState().get(Variables.QUEUE, List.class);
             List<String> newqueue = new ArrayList<>(queue);
             context.getExtendedState().getVariables().put(Variables.TURN, "");

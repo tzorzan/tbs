@@ -1,16 +1,11 @@
 package it.tzorzan;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.Message;
 import org.springframework.statemachine.config.EnableStateMachine;
 import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
-import org.springframework.statemachine.listener.StateMachineListener;
-import org.springframework.statemachine.listener.StateMachineListenerAdapter;
-import org.springframework.statemachine.state.State;
 
 import java.util.EnumSet;
 
@@ -23,8 +18,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
             throws Exception {
         config
                 .withConfiguration()
-                .autoStartup(true)
-                .listener(listener());
+                .autoStartup(true);
     }
 
     @Override
@@ -61,29 +55,5 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
                 .withExternal().source(States.WAITING).target(States.CHECK).timer(30000).action(Actions.dequeueAction())
                 .and()
                 .withChoice().source(States.CHECK).first(States.FREE, Guards.emptyQueueGuard()).last(States.TURN);
-    }
-
-    @Bean
-    public StateMachineListener<States, Events> listener() {
-        return new StateMachineListenerAdapter<States, Events>() {
-            @Override
-            public void stateChanged(State<States, Events> from, State<States, Events> to) {
-                if(from != null) {
-                    System.out.println("State change " + from.getId() + " -> " + to.getId());
-                } else {
-                    System.out.println("State change to: " + to.getId());
-                }
-            }
-
-            @Override
-            public void eventNotAccepted(Message<Events> event) {
-                System.out.println("Event not accepted: " + event.toString());
-            }
-
-            @Override
-            public void extendedStateChanged(Object key, Object value) {
-                System.out.println("Extended state: " + key.toString() + " -> " + value.toString());
-            }
-        };
     }
 }
