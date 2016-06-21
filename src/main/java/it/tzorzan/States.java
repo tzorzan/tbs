@@ -4,5 +4,6 @@ public enum States {
     FREE,
     WAITING,
     OCCUPIED,
-    CHECK
+    CHECK,
+    TURN
 }

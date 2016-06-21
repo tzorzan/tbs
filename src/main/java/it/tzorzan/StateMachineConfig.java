@@ -32,10 +32,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
             throws Exception {
         states
                 .withStates()
-                .initial(States.FREE)
-                .state(States.FREE, Actions.clearAction(), null)
-                .state(States.WAITING, Actions.dequeueAction(), null)
-                .junction(States.CHECK)
+                .initial(States.FREE, Actions.initialAction())
+                .state(States.TURN, Actions.turnAction(), null)
+                .choice(States.CHECK)
                 .states(EnumSet.allOf(States.class));
     }
 
@@ -43,7 +42,11 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
     public void configure(StateMachineTransitionConfigurer<States, Events> transitions)
             throws Exception {
         transitions
-                .withExternal().source(States.FREE).target(States.WAITING).event(Events.queue).action(Actions.queueAction())
+                .withExternal().source(States.FREE).target(States.TURN).event(Events.queue).action(Actions.queueAction())
+                .and()
+                .withExternal().source(States.TURN).target(States.WAITING)
+                .and()
+                .withInternal().source(States.TURN).event(Events.queue).action(Actions.queueAction())
                 .and()
                 .withInternal().source(States.WAITING).event(Events.queue).action(Actions.queueAction())
                 .and()
@@ -53,12 +56,11 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
                 .and()
                 .withExternal().source(States.FREE).target(States.OCCUPIED).event(Events.enter)
                 .and()
-                .withExternal().source(States.OCCUPIED).target(States.CHECK).event(Events.exit)
+                .withExternal().source(States.OCCUPIED).target(States.CHECK).event(Events.exit).action(Actions.dequeueAction())
                 .and()
-                //TODO: Internal transition WAITING -> WAITING using CHECK pseudo-state doesn't trigger the dequeue action
-                .withExternal().source(States.WAITING).target(States.CHECK).timer(30000)
+                .withExternal().source(States.WAITING).target(States.CHECK).timer(30000).action(Actions.dequeueAction())
                 .and()
-                .withJunction().source(States.CHECK).first(States.FREE, Guards.emptyQueueGuard()).last(States.WAITING);
+                .withChoice().source(States.CHECK).first(States.FREE, Guards.emptyQueueGuard()).last(States.TURN);
     }
 
     @Bean

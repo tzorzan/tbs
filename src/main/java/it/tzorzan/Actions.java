@@ -10,7 +10,7 @@ import java.util.List;
 public class Actions {
 
     @Bean
-    public static Action<States, Events> clearAction() {
+    public static Action<States, Events> initialAction() {
         return ((StateContext<States, Events> context) -> {
             context.getExtendedState().getVariables().put(Variables.TURN, "");
             context.getExtendedState().getVariables().put(Variables.QUEUE, new ArrayList<String>());
@@ -28,13 +28,22 @@ public class Actions {
         }
     }
 
+    private static class TurnAction implements Action<States, Events> {
+        @Override
+        public void execute(StateContext<States, Events> context) {
+            System.out.println("Action called: " + this.getClass().toString());
+            List<String> queue = context.getExtendedState().get(Variables.QUEUE, List.class);
+            context.getExtendedState().getVariables().put(Variables.TURN, new String(queue.get(0)));
+        }
+    }
+
     private static class DequeueAction implements Action<States, Events> {
         @Override
         public void execute(StateContext<States, Events> context) {
             System.out.println("Action called: " + this.getClass().toString());
             List<String> queue = context.getExtendedState().get(Variables.QUEUE, List.class);
             List<String> newqueue = new ArrayList<>(queue);
-            context.getExtendedState().getVariables().put(Variables.TURN, new String(newqueue.get(0)));
+            context.getExtendedState().getVariables().put(Variables.TURN, "");
             newqueue.remove(0);
             context.getExtendedState().getVariables().put(Variables.QUEUE, newqueue);
         }
@@ -44,6 +53,11 @@ public class Actions {
     @Bean
     public static QueueAction queueAction() {
         return new QueueAction();
+    }
+
+    @Bean
+    public static TurnAction turnAction() {
+        return new TurnAction();
     }
 
     @Bean
