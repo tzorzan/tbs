@@ -2,42 +2,74 @@ package it.tzorzan;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.statemachine.StateContext;
+import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.action.Action;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Actions {
 
     @Bean
     public static Action<States, Events> initvar() {
-        return ( context -> {
-            setQueue(context, new ArrayList<>());
-            setTurn(context, "");
+        return ( stateContext -> {
+            setQueue(stateContext, new ArrayList<>());
+            setTurn(stateContext, "");
+            setTimer(stateContext, new Timer());
         });
     }
 
     @Bean
     public static Action<States, Events> queue() {
-        return ( context -> getQueue(context).add((String) context.getMessageHeader(Headers.NAME)) );
+        return ( stateContext -> getQueue(stateContext).add((String) stateContext.getMessageHeader(Headers.NAME)) );
     }
 
     @Bean
     public static Action<States, Events> turn() {
-        return ( context -> setTurn(context, getQueue(context).stream().findFirst().orElse("")) );
+        return ( stateContext -> setTurn(stateContext, getQueue(stateContext).stream().findFirst().orElse("")) );
     }
 
     @Bean
     public static Action<States, Events> dequeue() {
-        return ( context -> {
-            List<String> queue = getQueue(context);
+        return ( stateContext -> {
+            List<String> queue = getQueue(stateContext);
             queue.remove(0);
-            setQueue(context, queue);
-            setTurn(context, "");
+            setQueue(stateContext, queue);
+            setTurn(stateContext, "");
         });
     }
 
-    private static List<String> getQueue(StateContext<States, Events> context) {
+    @Bean
+    public static Action<States, Events> startimer() {
+        return (stateContext -> {
+            getTimer(stateContext).schedule(new TimeoutTask(stateContext.getStateMachine()), 30000);
+        });
+    }
+
+    @Bean
+    public static Action<States, Events> discardtimer() {
+        return (stateContext -> {
+            getTimer(stateContext).cancel();
+            getTimer(stateContext).purge();
+        });
+    }
+
+    private static class TimeoutTask extends TimerTask {
+        private StateMachine<States, Events> stateMachine;
+
+        TimeoutTask(StateMachine<States, Events> sm) {
+            this.stateMachine = sm;
+        }
+
+        @Override
+        public void run() {
+            this.stateMachine.sendEvent(Events.timeout);
+        }
+    }
+
+    public static List<String> getQueue(StateContext<States, Events> context) {
         return context.getExtendedState().get(Variables.QUEUE, List.class);
     }
 
@@ -48,6 +80,15 @@ public class Actions {
 
     private static void setTurn(StateContext<States, Events> context, String name) {
         context.getExtendedState().getVariables().put(Variables.TURN, name);
+        return;
     }
 
+    private static Timer getTimer(StateContext<States, Events> context) {
+        return context.getExtendedState().get(Variables.TIMER, Timer.class);
+    }
+
+    private static void setTimer(StateContext<States, Events> context, Timer timer) {
+        context.getExtendedState().getVariables().put(Variables.TIMER, timer);
+        return;
+    }
 }

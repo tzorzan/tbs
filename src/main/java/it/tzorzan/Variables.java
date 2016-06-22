@@ -2,5 +2,6 @@ package it.tzorzan;
 
 public enum Variables {
     QUEUE,
-    TURN
+    TURN,
+    TIMER
 }

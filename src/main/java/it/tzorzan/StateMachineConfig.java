@@ -28,6 +28,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
                 .withStates()
                 .initial(States.FREE, Actions.initvar())
                 .state(States.TURN, Actions.turn(), null)
+                .state(States.WAITING, Actions.startimer(), null)
                 .choice(States.CHECK)
                 .states(EnumSet.allOf(States.class));
     }
@@ -46,13 +47,13 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
                 .and()
                 .withInternal().source(States.OCCUPIED).event(Events.queue).action(Actions.queue())
                 .and()
-                .withExternal().source(States.WAITING).target(States.OCCUPIED).event(Events.enter)
+                .withExternal().source(States.WAITING).target(States.OCCUPIED).event(Events.enter).action(Actions.discardtimer())
                 .and()
                 .withExternal().source(States.FREE).target(States.OCCUPIED).event(Events.enter)
                 .and()
                 .withExternal().source(States.OCCUPIED).target(States.CHECK).event(Events.exit).action(Actions.dequeue())
                 .and()
-                .withExternal().source(States.WAITING).target(States.CHECK).timer(30000).action(Actions.dequeue())
+                .withExternal().source(States.WAITING).target(States.CHECK).event(Events.timeout).action(Actions.dequeue())
                 .and()
                 .withChoice().source(States.CHECK).first(States.FREE, Guards.emptyQueueGuard()).last(States.TURN);
     }
