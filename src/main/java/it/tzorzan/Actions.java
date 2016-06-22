@@ -10,56 +10,44 @@ import java.util.List;
 public class Actions {
 
     @Bean
-    public static Action<States, Events> initialAction() {
-        return ((StateContext<States, Events> context) -> {
-            context.getExtendedState().getVariables().put(Variables.TURN, "");
-            context.getExtendedState().getVariables().put(Variables.QUEUE, new ArrayList<String>());
+    public static Action<States, Events> initvar() {
+        return ( context -> {
+            setQueue(context, new ArrayList<>());
+            setTurn(context, "");
         });
     }
 
-    private static class QueueAction implements Action<States, Events> {
-        @Override
-        public void execute(StateContext<States, Events> context) {
-            List<String> queue = context.getExtendedState().get(Variables.QUEUE, List.class);
-            List<String> newqueue = new ArrayList<>(queue);
-            newqueue.add((String) context.getMessageHeader(Headers.NAME));
-            context.getExtendedState().getVariables().put(Variables.QUEUE, newqueue);
-        }
-    }
-
-    private static class TurnAction implements Action<States, Events> {
-        @Override
-        public void execute(StateContext<States, Events> context) {
-            List<String> queue = context.getExtendedState().get(Variables.QUEUE, List.class);
-            context.getExtendedState().getVariables().put(Variables.TURN, new String(queue.get(0)));
-        }
-    }
-
-    private static class DequeueAction implements Action<States, Events> {
-        @Override
-        public void execute(StateContext<States, Events> context) {
-            List<String> queue = context.getExtendedState().get(Variables.QUEUE, List.class);
-            List<String> newqueue = new ArrayList<>(queue);
-            context.getExtendedState().getVariables().put(Variables.TURN, "");
-            newqueue.remove(0);
-            context.getExtendedState().getVariables().put(Variables.QUEUE, newqueue);
-        }
-    }
-
-
     @Bean
-    public static QueueAction queueAction() {
-        return new QueueAction();
+    public static Action<States, Events> queue() {
+        return ( context -> getQueue(context).add((String) context.getMessageHeader(Headers.NAME)) );
     }
 
     @Bean
-    public static TurnAction turnAction() {
-        return new TurnAction();
+    public static Action<States, Events> turn() {
+        return ( context -> setTurn(context, getQueue(context).stream().findFirst().orElse("")) );
     }
 
     @Bean
-    public static DequeueAction dequeueAction() {
-        return new DequeueAction();
+    public static Action<States, Events> dequeue() {
+        return ( context -> {
+            List<String> queue = getQueue(context);
+            queue.remove(0);
+            setQueue(context, queue);
+            setTurn(context, "");
+        });
+    }
+
+    private static List<String> getQueue(StateContext<States, Events> context) {
+        return context.getExtendedState().get(Variables.QUEUE, List.class);
+    }
+
+    private static void setQueue(StateContext<States, Events> context, List<String> list) {
+        context.getExtendedState().getVariables().put(Variables.QUEUE, list);
+        return;
+    }
+
+    private static void setTurn(StateContext<States, Events> context, String name) {
+        context.getExtendedState().getVariables().put(Variables.TURN, name);
     }
 
 }

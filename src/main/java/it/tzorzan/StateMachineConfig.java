@@ -26,8 +26,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
             throws Exception {
         states
                 .withStates()
-                .initial(States.FREE, Actions.initialAction())
-                .state(States.TURN, Actions.turnAction(), null)
+                .initial(States.FREE, Actions.initvar())
+                .state(States.TURN, Actions.turn(), null)
                 .choice(States.CHECK)
                 .states(EnumSet.allOf(States.class));
     }
@@ -36,23 +36,23 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
     public void configure(StateMachineTransitionConfigurer<States, Events> transitions)
             throws Exception {
         transitions
-                .withExternal().source(States.FREE).target(States.TURN).event(Events.queue).action(Actions.queueAction())
+                .withExternal().source(States.FREE).target(States.TURN).event(Events.queue).action(Actions.queue())
                 .and()
                 .withExternal().source(States.TURN).target(States.WAITING)
                 .and()
-                .withInternal().source(States.TURN).event(Events.queue).action(Actions.queueAction())
+                .withInternal().source(States.TURN).event(Events.queue).action(Actions.queue())
                 .and()
-                .withInternal().source(States.WAITING).event(Events.queue).action(Actions.queueAction())
+                .withInternal().source(States.WAITING).event(Events.queue).action(Actions.queue())
                 .and()
-                .withInternal().source(States.OCCUPIED).event(Events.queue).action(Actions.queueAction())
+                .withInternal().source(States.OCCUPIED).event(Events.queue).action(Actions.queue())
                 .and()
                 .withExternal().source(States.WAITING).target(States.OCCUPIED).event(Events.enter)
                 .and()
                 .withExternal().source(States.FREE).target(States.OCCUPIED).event(Events.enter)
                 .and()
-                .withExternal().source(States.OCCUPIED).target(States.CHECK).event(Events.exit).action(Actions.dequeueAction())
+                .withExternal().source(States.OCCUPIED).target(States.CHECK).event(Events.exit).action(Actions.dequeue())
                 .and()
-                .withExternal().source(States.WAITING).target(States.CHECK).timer(30000).action(Actions.dequeueAction())
+                .withExternal().source(States.WAITING).target(States.CHECK).timer(30000).action(Actions.dequeue())
                 .and()
                 .withChoice().source(States.CHECK).first(States.FREE, Guards.emptyQueueGuard()).last(States.TURN);
     }
