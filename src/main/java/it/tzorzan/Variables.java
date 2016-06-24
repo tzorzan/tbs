@@ -8,7 +8,6 @@ import java.util.Timer;
 
 public enum Variables {
     QUEUE,
-    TURN,
     TIMER,
     COUNTDOWN_TIMER,
     COUNTDOWN;
@@ -23,15 +22,6 @@ public enum Variables {
 
     public static void setQueue(StateContext<States, Events> context, List<String> list) {
         context.getExtendedState().getVariables().put(Variables.QUEUE, list);
-        return;
-    }
-
-    public static String getTurn(StateMachine<States, Events> machine) {
-        return machine.getExtendedState().get(Variables.TURN, String.class);
-    }
-
-    public static void setTurn(StateContext<States, Events> context, String name) {
-        context.getExtendedState().getVariables().put(Variables.TURN, name);
         return;
     }
 

@@ -34,9 +34,9 @@ public class TbsApplication implements CommandLineRunner {
 			public StateContext<States, Events> postTransition(StateContext<States, Events> stateContext) {
 				States s = stateContext.getStateMachine().getState().getId();
 				List<String> queue = stateContext.getExtendedState().get(Variables.QUEUE, List.class);
-				String turn = stateContext.getExtendedState().get(Variables.TURN, String.class);
 				if(States.isPublicState(s)) {
-					log.info("S=" + s + " T=" + turn + " Q=" + queue);
+					log.info("S=" + s + " Q=" + queue);
+					//TODO: emit websocket staus update event
 				}
 				return stateContext;
 			}

@@ -32,7 +32,6 @@ public class TbsApplicationTests {
 						.stateMachine(machine)
 						.step()
 						.expectState(States.FREE)
-						.expectVariable(Variables.TURN, "")
 						.and()
 						.build();
 		plan.test();

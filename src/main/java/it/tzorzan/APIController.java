@@ -22,7 +22,6 @@ public class APIController {
         Status status = new Status();
         status.state = stateMachine.getState().getId().toString();
         status.queue = Variables.getQueue(stateMachine);
-        status.turn = Optional.ofNullable(Variables.getTurn(stateMachine)).orElse("");
         status.countdown = Optional.ofNullable(Variables.getCountdown(stateMachine)).orElse(0);
         return status;
     }

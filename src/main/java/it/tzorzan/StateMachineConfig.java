@@ -27,7 +27,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
         states
                 .withStates()
                 .initial(States.FREE, Actions.initvar())
-                .state(States.TURN, Actions.turn(), null)
                 .state(States.WAITING, Actions.startimer(), null)
                 .choice(States.CHECK)
                 .states(EnumSet.allOf(States.class));
@@ -49,7 +48,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
                 .and()
                 .withExternal().source(States.WAITING).target(States.OCCUPIED).event(Events.enter).action(Actions.discardtimer())
                 .and()
-                //TODO: push uknown person in TURN and QUEUE
+                //TODO: push uknown person in QUEUE
                 .withExternal().source(States.FREE).target(States.OCCUPIED).event(Events.enter)
                 .and()
                 .withExternal().source(States.OCCUPIED).target(States.CHECK).event(Events.exit).action(Actions.dequeue())

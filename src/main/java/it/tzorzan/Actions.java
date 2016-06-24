@@ -23,7 +23,6 @@ public class Actions {
     public static Action<States, Events> initvar() {
         return ( stateContext -> {
             setQueue(stateContext, new ArrayList<>());
-            setTurn(stateContext, "");
             setCountdown(stateContext, 0);
         });
     }
@@ -34,17 +33,11 @@ public class Actions {
     }
 
     @Bean
-    public static Action<States, Events> turn() {
-        return ( stateContext -> setTurn(stateContext, getQueue(stateContext).stream().findFirst().orElse("")) );
-    }
-
-    @Bean
     public static Action<States, Events> dequeue() {
         return ( stateContext -> {
             List<String> queue = getQueue(stateContext);
             queue.remove(0);
             setQueue(stateContext, queue);
-            setTurn(stateContext, "");
         });
     }
 
