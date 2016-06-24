@@ -9,7 +9,6 @@ import org.springframework.statemachine.StateMachine;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -22,8 +21,8 @@ public class APIController {
     public Status getStatus() {
         Status status = new Status();
         status.state = stateMachine.getState().getId().toString();
-        status.queue = stateMachine.getExtendedState().get(Variables.QUEUE, List.class);
-        status.turn = Optional.ofNullable(stateMachine.getExtendedState().get(Variables.TURN, String.class)).orElse("");
+        status.queue = Variables.getQueue(stateMachine);
+        status.turn = Optional.ofNullable(Variables.getTurn(stateMachine)).orElse("");
         return status;
     }
 
@@ -54,7 +53,6 @@ public class APIController {
             throw new EventNotAcceptedException();
         }
     }
-
 
     @ResponseStatus(value=HttpStatus.NOT_ACCEPTABLE, reason="Event can not be accepted.")  // 406
     public class EventNotAcceptedException extends RuntimeException {

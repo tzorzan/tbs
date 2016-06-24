@@ -1,7 +1,8 @@
 package it.tzorzan;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
-import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.action.Action;
 
@@ -10,14 +11,19 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static it.tzorzan.Variables.*;
+
 public class Actions {
+    private static final Logger log = LoggerFactory
+            .getLogger(TbsApplication.class);
+
+    public static final Integer TIMEOUT = 30000;
 
     @Bean
     public static Action<States, Events> initvar() {
         return ( stateContext -> {
             setQueue(stateContext, new ArrayList<>());
             setTurn(stateContext, "");
-            setTimer(stateContext, new Timer());
         });
     }
 
@@ -44,16 +50,20 @@ public class Actions {
     @Bean
     public static Action<States, Events> startimer() {
         return (stateContext -> {
-            getTimer(stateContext).schedule(new TimeoutTask(stateContext.getStateMachine()), 30000);
+            StateMachine<States, Events> stateMachine = stateContext.getStateMachine();
+            Timer t = new Timer();
+            Timer c = new Timer();
+            t.schedule(new TimeoutTask(stateMachine), TIMEOUT);
+            c.scheduleAtFixedRate(new CountdownTask(stateMachine), 1000, 1000);
+            setTimer(stateContext, t);
+            setCountdownTimer(stateContext, c);
+            setCountdown(stateMachine, TIMEOUT/1000);
         });
     }
 
     @Bean
     public static Action<States, Events> discardtimer() {
-        return (stateContext -> {
-            getTimer(stateContext).cancel();
-            getTimer(stateContext).purge();
-        });
+        return ( stateContext -> discardTimers(stateContext.getStateMachine()) );
     }
 
     private static class TimeoutTask extends TimerTask {
@@ -65,30 +75,31 @@ public class Actions {
 
         @Override
         public void run() {
-            this.stateMachine.sendEvent(Events.timeout);
+            discardTimers(stateMachine);
+            stateMachine.sendEvent(Events.timeout);
         }
     }
 
-    public static List<String> getQueue(StateContext<States, Events> context) {
-        return context.getExtendedState().get(Variables.QUEUE, List.class);
+    private static class CountdownTask extends TimerTask {
+        private StateMachine<States, Events> stateMachine;
+
+        CountdownTask(StateMachine<States, Events> machine) {
+            this.stateMachine = machine;
+        }
+
+        @Override
+        public void run() {
+            setCountdown(stateMachine, getCountdown(stateMachine) - 1);
+            //TODO: emit websocket event
+            log.info("COUNTDOWN="+ getCountdown(stateMachine));
+        }
     }
 
-    private static void setQueue(StateContext<States, Events> context, List<String> list) {
-        context.getExtendedState().getVariables().put(Variables.QUEUE, list);
-        return;
+    private static void discardTimers(StateMachine<States, Events> machine) {
+        getTimer(machine).cancel();
+        getTimer(machine).purge();
+        getCountdownTimer(machine).cancel();
+        getCountdownTimer(machine).purge();
     }
 
-    private static void setTurn(StateContext<States, Events> context, String name) {
-        context.getExtendedState().getVariables().put(Variables.TURN, name);
-        return;
-    }
-
-    private static Timer getTimer(StateContext<States, Events> context) {
-        return context.getExtendedState().get(Variables.TIMER, Timer.class);
-    }
-
-    private static void setTimer(StateContext<States, Events> context, Timer timer) {
-        context.getExtendedState().getVariables().put(Variables.TIMER, timer);
-        return;
-    }
 }
