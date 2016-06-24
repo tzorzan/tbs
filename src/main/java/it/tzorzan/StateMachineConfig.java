@@ -49,6 +49,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
                 .and()
                 .withExternal().source(States.WAITING).target(States.OCCUPIED).event(Events.enter).action(Actions.discardtimer())
                 .and()
+                //TODO: push uknown person in TURN and QUEUE
                 .withExternal().source(States.FREE).target(States.OCCUPIED).event(Events.enter)
                 .and()
                 .withExternal().source(States.OCCUPIED).target(States.CHECK).event(Events.exit).action(Actions.dequeue())

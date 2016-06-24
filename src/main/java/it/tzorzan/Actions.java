@@ -24,6 +24,7 @@ public class Actions {
         return ( stateContext -> {
             setQueue(stateContext, new ArrayList<>());
             setTurn(stateContext, "");
+            setCountdown(stateContext, 0);
         });
     }
 
@@ -100,6 +101,7 @@ public class Actions {
         getTimer(machine).purge();
         getCountdownTimer(machine).cancel();
         getCountdownTimer(machine).purge();
+        setCountdown(machine, 0);
     }
 
 }

@@ -5,6 +5,7 @@ import java.util.Optional;
 
 public class Status {
     public String state;
-    public List<String> queue;
     public String turn;
+    public List<String> queue;
+    public Integer countdown;
 }

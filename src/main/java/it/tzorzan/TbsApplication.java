@@ -30,7 +30,6 @@ public class TbsApplication implements CommandLineRunner {
 		//Adding interceptor for logging
 		stateMachine.getStateMachineAccessor()
 				.withRegion().addStateMachineInterceptor(new StateMachineInterceptorAdapter<States, Events>() {
-
 			@Override
 			public StateContext<States, Events> postTransition(StateContext<States, Events> stateContext) {
 				States s = stateContext.getStateMachine().getState().getId();

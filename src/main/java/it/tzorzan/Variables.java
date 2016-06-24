@@ -39,8 +39,13 @@ public enum Variables {
         return machine.getExtendedState().get(Variables.TIMER, Timer.class);
     }
 
+    public static void setTimer(StateMachine<States, Events> machine, Timer timer) {
+        machine.getExtendedState().getVariables().put(Variables.TIMER, timer);
+        return;
+    }
+
     public static void setTimer(StateContext<States, Events> context, Timer timer) {
-        context.getExtendedState().getVariables().put(Variables.TIMER, timer);
+        setTimer(context.getStateMachine(), timer);
         return;
     }
 
@@ -48,8 +53,13 @@ public enum Variables {
         return machine.getExtendedState().get(Variables.COUNTDOWN_TIMER, Timer.class);
     }
 
+    public static void setCountdownTimer(StateMachine<States, Events> machine, Timer timer) {
+        machine.getExtendedState().getVariables().put(Variables.COUNTDOWN_TIMER, timer);
+        return;
+    }
+
     public static void setCountdownTimer(StateContext<States, Events> context, Timer timer) {
-        context.getExtendedState().getVariables().put(Variables.COUNTDOWN_TIMER, timer);
+        setCountdownTimer(context.getStateMachine(), timer);
         return;
     }
 
@@ -59,6 +69,11 @@ public enum Variables {
 
     public static void setCountdown(StateMachine<States, Events> machine, Integer countdown) {
         machine.getExtendedState().getVariables().put(Variables.COUNTDOWN, countdown);
+        return;
+    }
+
+    public static void setCountdown(StateContext<States, Events> context, Integer countdown) {
+        setCountdown(context.getStateMachine(), countdown);
         return;
     }
 
