@@ -18,6 +18,7 @@ public class Actions {
             .getLogger(TbsApplication.class);
 
     public static final Integer TIMEOUT = 30000;
+    public static final String UNKNOWN = "John Doe";
 
     @Bean
     public static Action<States, Events> initvar() {
@@ -30,6 +31,11 @@ public class Actions {
     @Bean
     public static Action<States, Events> queue() {
         return ( stateContext -> getQueue(stateContext).add((String) stateContext.getMessageHeader(Headers.NAME)) );
+    }
+
+    @Bean
+    public static Action<States, Events> queueUnknown() {
+        return ( stateContext -> getQueue(stateContext).add(UNKNOWN) );
     }
 
     @Bean
