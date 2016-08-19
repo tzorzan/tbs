@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
+@CrossOrigin
 @Controller
 public class APIController {
     @Autowired
@@ -20,7 +21,7 @@ public class APIController {
     @ResponseBody
     public Status getStatus() {
         Status status = new Status();
-        status.state = stateMachine.getState().getId().toString();
+        status.status = stateMachine.getState().getId().toString();
         status.queue = Variables.getQueue(stateMachine);
         status.countdown = Optional.ofNullable(Variables.getCountdown(stateMachine)).orElse(0);
         return status;
