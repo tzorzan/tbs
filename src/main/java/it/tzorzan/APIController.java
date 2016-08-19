@@ -21,7 +21,7 @@ public class APIController {
     @ResponseBody
     public Status getStatus() {
         Status status = new Status();
-        status.status = stateMachine.getState().getId().toString();
+        status.state = stateMachine.getState().getId().toString();
         status.queue = Variables.getQueue(stateMachine);
         status.countdown = Optional.ofNullable(Variables.getCountdown(stateMachine)).orElse(0);
         return status;
