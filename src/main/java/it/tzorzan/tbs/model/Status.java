@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class Status {
-    public String status;
+    public String state;
     public List<String> queue;
     public Integer countdown;
 }
