@@ -4,5 +4,6 @@ public enum Events {
     enter,
     exit,
     queue,
+    dequeue,
     timeout
 }

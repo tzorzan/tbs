@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.stream.Collectors;
 
 import static it.tzorzan.Variables.*;
 
@@ -58,6 +59,16 @@ public class Actions {
             List<String> queue = getQueue(stateContext);
             queue.remove(0);
             setQueue(stateContext, queue);
+        });
+    }
+
+    @Bean
+    public static Action<States, Events> dequeueName() {
+        return ( stateContext -> {
+            List<String> newqueue = getQueue(stateContext).stream()
+                    .filter(s -> !s.equals( stateContext.getMessageHeader(Headers.NAME)))
+                    .collect(Collectors.toList());
+            setQueue(stateContext, newqueue);
         });
     }
 

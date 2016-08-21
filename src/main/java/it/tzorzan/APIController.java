@@ -39,6 +39,18 @@ public class APIController {
         }
     }
 
+    @RequestMapping(value = "/dequeue", method = RequestMethod.POST)
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void removeFromQueue(@RequestParam("name") String name) {
+        Message<Events> message = MessageBuilder
+                .withPayload(Events.dequeue)
+                .setHeader(Headers.NAME.toString(), name)
+                .build();
+        if (!stateMachine.sendEvent(message)) {
+            throw new EventNotAcceptedException();
+        }
+    }
+
     @RequestMapping(value = "/enter", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void enter() {
