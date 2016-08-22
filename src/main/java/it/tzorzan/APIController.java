@@ -42,6 +42,11 @@ public class APIController {
     @RequestMapping(value = "/dequeue", method = RequestMethod.POST)
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void removeFromQueue(@RequestParam("name") String name) {
+        Optional<String> turn = Variables.getQueue(stateMachine).stream().findFirst();
+        //TODO: check for authorization
+        if (!turn.isPresent() || turn.get().equals(name)) {
+            throw new EventNotAcceptedException();
+        }
         Message<Events> message = MessageBuilder
                 .withPayload(Events.dequeue)
                 .setHeader(Headers.NAME.toString(), name)
