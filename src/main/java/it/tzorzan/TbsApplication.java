@@ -12,6 +12,7 @@ import org.springframework.statemachine.support.StateMachineInterceptorAdapter;
 
 import java.util.List;
 
+@SuppressWarnings("SpringJavaAutowiringInspection")
 @SpringBootApplication
 public class TbsApplication implements CommandLineRunner {
 
@@ -36,7 +37,6 @@ public class TbsApplication implements CommandLineRunner {
 				List<String> queue = stateContext.getExtendedState().get(Variables.QUEUE, List.class);
 				if(States.isPublicState(s)) {
 					log.info("S=" + s + " Q=" + queue);
-					//TODO: emit websocket staus update event
 				}
 				return stateContext;
 			}

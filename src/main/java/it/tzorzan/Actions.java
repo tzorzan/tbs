@@ -1,25 +1,37 @@
 package it.tzorzan;
 
+import it.tzorzan.tbs.model.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.event.EventListener;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.action.Action;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static it.tzorzan.Variables.*;
 
+@SuppressWarnings("SpringJavaAutowiringInspection")
 @Component
 public class Actions {
     private static final Logger log = LoggerFactory
             .getLogger(TbsApplication.class);
+
+    private static StateMachine<States, Events> stateMachine;
+    private static SimpMessagingTemplate messageTemplate;
+
+    @Autowired
+    public Actions(StateMachine<States, Events> stateMachine, SimpMessagingTemplate template) {
+        this.stateMachine = stateMachine;
+        this.messageTemplate = template;
+    }
 
     public static Integer TIMEOUT;
 
@@ -45,12 +57,18 @@ public class Actions {
 
     @Bean
     public static Action<States, Events> queue() {
-        return ( stateContext -> getQueue(stateContext).add((String) stateContext.getMessageHeader(Headers.NAME)) );
+        return ( stateContext -> {
+            getQueue(stateContext).add((String) stateContext.getMessageHeader(Headers.NAME));
+            updateStatus(stateContext.getStateMachine());
+        });
     }
 
     @Bean
     public static Action<States, Events> queueUnknown() {
-        return ( stateContext -> getQueue(stateContext).add(UNKNOWN) );
+        return ( stateContext -> {
+            getQueue(stateContext).add(UNKNOWN);
+            updateStatus(stateContext.getStateMachine());
+        });
     }
 
     @Bean
@@ -59,6 +77,7 @@ public class Actions {
             List<String> queue = getQueue(stateContext);
             queue.remove(0);
             setQueue(stateContext, queue);
+            updateStatus(stateContext.getStateMachine());
         });
     }
 
@@ -69,6 +88,7 @@ public class Actions {
                     .filter(s -> !s.equals( stateContext.getMessageHeader(Headers.NAME)))
                     .collect(Collectors.toList());
             setQueue(stateContext, newqueue);
+            updateStatus(stateContext.getStateMachine());
         });
     }
 
@@ -83,6 +103,7 @@ public class Actions {
             setTimer(stateContext, t);
             setCountdownTimer(stateContext, c);
             setCountdown(stateMachine, TIMEOUT/1000);
+            updateStatus(stateContext.getStateMachine());
         });
     }
 
@@ -115,8 +136,8 @@ public class Actions {
         @Override
         public void run() {
             setCountdown(stateMachine, getCountdown(stateMachine) - 1);
-            //TODO: emit websocket event
-            log.info("COUNTDOWN="+ getCountdown(stateMachine));
+            updateStatus(stateMachine);
+            log.debug("COUNTDOWN="+ getCountdown(stateMachine));
         }
     }
 
@@ -128,4 +149,21 @@ public class Actions {
         setCountdown(machine, 0);
     }
 
+    private static Status updateStatus(StateMachine stateMachine) {
+        Status status = new Status(
+                stateMachine.getState().getId().toString(),
+                Variables.getQueue(stateMachine),
+                Optional.ofNullable(Variables.getCountdown(stateMachine)).orElse(0)
+        );
+        messageTemplate.convertAndSend("/topic/status", status);
+        return status;
+    }
+
+    @EventListener
+    public static void sessionConnectedHandler(SessionSubscribeEvent event) {
+        String destination = event.getMessage().getHeaders().get("simpDestination").toString();
+        if(destination.equals("/topic/status")) {
+            updateStatus(stateMachine);
+        }
+    }
 }

@@ -4,6 +4,7 @@ import it.tzorzan.tbs.model.Status;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.stereotype.Controller;
@@ -20,11 +21,11 @@ public class APIController {
     @RequestMapping(value = "/status", method = RequestMethod.GET, produces="application/json")
     @ResponseBody
     public Status getStatus() {
-        Status status = new Status();
-        status.state = stateMachine.getState().getId().toString();
-        status.queue = Variables.getQueue(stateMachine);
-        status.countdown = Optional.ofNullable(Variables.getCountdown(stateMachine)).orElse(0);
-        return status;
+        return new Status(
+                stateMachine.getState().getId().toString(),
+                Variables.getQueue(stateMachine),
+                Optional.ofNullable(Variables.getCountdown(stateMachine)).orElse(0)
+        );
     }
 
     @RequestMapping(value = "/queue", method = RequestMethod.POST)
@@ -75,4 +76,10 @@ public class APIController {
     @ResponseStatus(value=HttpStatus.NOT_ACCEPTABLE, reason="Event can not be accepted.")  // 406
     public class EventNotAcceptedException extends RuntimeException {
     }
+
+    @SendTo("/topic/status")
+    public Status updateStatus(Status status) {
+        return status;
+    }
+
 }
