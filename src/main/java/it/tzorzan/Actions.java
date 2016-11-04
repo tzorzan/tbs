@@ -109,7 +109,10 @@ public class Actions {
 
     @Bean
     public static Action<States, Events> discardtimer() {
-        return ( stateContext -> discardTimers(stateContext.getStateMachine()) );
+        return ( stateContext -> {
+            discardTimers(stateContext.getStateMachine());
+            updateStatus(stateContext.getStateMachine());
+            });
     }
 
     private static class TimeoutTask extends TimerTask {
