@@ -56,19 +56,21 @@ public class Actions {
     }
 
     @Bean
+    public static Action<States, Events> updateStatus() {
+        return ( stateContext -> sendMessageUpdateStatus(stateContext.getStateMachine()));
+    }
+
+    @Bean
     public static Action<States, Events> queue() {
         return ( stateContext -> {
             getQueue(stateContext).add((String) stateContext.getMessageHeader(Headers.NAME));
-            updateStatus(stateContext.getStateMachine());
+            sendMessageUpdateStatus(stateMachine);
         });
     }
 
     @Bean
     public static Action<States, Events> queueUnknown() {
-        return ( stateContext -> {
-            getQueue(stateContext).add(UNKNOWN);
-            updateStatus(stateContext.getStateMachine());
-        });
+        return ( stateContext -> getQueue(stateContext).add(UNKNOWN));
     }
 
     @Bean
@@ -77,7 +79,6 @@ public class Actions {
             List<String> queue = getQueue(stateContext);
             queue.remove(0);
             setQueue(stateContext, queue);
-            updateStatus(stateContext.getStateMachine());
         });
     }
 
@@ -88,7 +89,6 @@ public class Actions {
                     .filter(s -> !s.equals( stateContext.getMessageHeader(Headers.NAME)))
                     .collect(Collectors.toList());
             setQueue(stateContext, newqueue);
-            updateStatus(stateContext.getStateMachine());
         });
     }
 
@@ -103,7 +103,6 @@ public class Actions {
             setTimer(stateContext, t);
             setCountdownTimer(stateContext, c);
             setCountdown(stateMachine, TIMEOUT/1000);
-            updateStatus(stateContext.getStateMachine());
         });
     }
 
@@ -111,7 +110,6 @@ public class Actions {
     public static Action<States, Events> discardtimer() {
         return ( stateContext -> {
             discardTimers(stateContext.getStateMachine());
-            updateStatus(stateContext.getStateMachine());
             });
     }
 
@@ -139,8 +137,8 @@ public class Actions {
         @Override
         public void run() {
             setCountdown(stateMachine, getCountdown(stateMachine) - 1);
-            updateStatus(stateMachine);
             log.debug("COUNTDOWN="+ getCountdown(stateMachine));
+            sendMessageUpdateStatus(stateMachine);
         }
     }
 
@@ -152,21 +150,22 @@ public class Actions {
         setCountdown(machine, 0);
     }
 
-    private static Status updateStatus(StateMachine stateMachine) {
+    private static void sendMessageUpdateStatus(StateMachine stateMachine) {
         Status status = new Status(
                 stateMachine.getState().getId().toString(),
                 Variables.getQueue(stateMachine),
                 Optional.ofNullable(Variables.getCountdown(stateMachine)).orElse(0)
         );
-        messageTemplate.convertAndSend("/topic/status", status);
-        return status;
+        Optional.ofNullable(messageTemplate).ifPresent( m -> m.convertAndSend("/topic/status", status));
+        return;
     }
 
+    // On subscription, send a status update
     @EventListener
     public static void sessionConnectedHandler(SessionSubscribeEvent event) {
         String destination = event.getMessage().getHeaders().get("simpDestination").toString();
         if(destination.equals("/topic/status")) {
-            updateStatus(stateMachine);
+            sendMessageUpdateStatus(stateMachine);
         }
     }
 }

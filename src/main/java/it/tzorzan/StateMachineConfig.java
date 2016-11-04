@@ -29,7 +29,10 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<States
                 .initial(States.FREE, Actions.initvar())
                 .state(States.WAITING, Actions.startimer(), null)
                 .choice(States.CHECK)
-                .states(EnumSet.allOf(States.class));
+                .state(States.FREE, Actions.updateStatus(), null)
+                .state(States.OCCUPIED, Actions.updateStatus(), null)
+                .state(States.CHECK)
+                .state(States.TURN);
     }
 
     @Override
